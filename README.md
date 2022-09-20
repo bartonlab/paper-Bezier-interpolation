@@ -12,7 +12,7 @@ Kai Shimagaki<sup>1</sup>, and John P. Barton<sup>1</sup>,#
 
 # Contents 
 
-Scripts for the analysis and creating figures are organized in note a directory, in a Jupyter Notebook as shown below:
+Scripts for the analysis and creating figures are organized in `note` a directory, in a Jupyter Notebook as shown below:
 
 
 1. Scripts for generating sequences from Wright-Fisher models can be found in the `Wright-Fisher_model_binary.ipynb` notebook. Since this process takes around 1 hours, we also provide pre-generated Wright-Fisher data sets that can be found in the [Zenodo record](https://www.link.comes.here). After downloading, need to extract the contents of the archive `data.zip` as the folder `/data/HIV`.
