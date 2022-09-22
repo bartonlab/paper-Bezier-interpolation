@@ -2,14 +2,14 @@
 
 This repository contains data and scripts for reproducing the results accompanying the manuscript
 
-### B\'ezier interpolation improves the inference of dynamical models from data ###
+### Bézier interpolation improves the inference of dynamical models from data ###
 
-Kai Shimagaki<sup>1</sup>, and John P. Barton<sup>1,2,#</sup>
+Kai Shimagaki<sup>1</sup> and John P. Barton<sup>1,2,#</sup>
 
 <sup>1</sup> Department of Physics and Astronomy, University of California, Riverside<br>
 <sup>2</sup> Department of Computational and Systems Biology, University of Pittsburgh School of Medicine
 
-<sup>#</sup> correspondence to [john.barton@ucr.edu](mailto:jpbarton@pitt.edu)
+<sup>#</sup> correspondence to [jpbarton@pitt.edu](mailto:jpbarton@pitt.edu)
 
 # Contents 
 
