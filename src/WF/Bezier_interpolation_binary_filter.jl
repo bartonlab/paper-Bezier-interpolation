@@ -132,3 +132,111 @@ function get_Bezier_Ctot_drift_x1mean_binary_simple(L, data, time_list_in)
     x1_mean /= Dt_sum
     return (C_tot1, drift, x1_mean, x1_init, x1_fini, point_set_x1_a, point_set_x1_b, point_set_x2_a, point_set_x2_b)
 end;
+
+
+
+function get_inserted_time_trajectory_set(time_list, x1_traject, x2_traject, time_interval_threshold=100)
+    time_list_inserted = []
+    x1_traject_inserted = []
+    x2_traject_inserted = []
+    len_time_list = length(time_list)
+    for i_t in 1:(len_time_list-1)
+        push!(time_list_inserted, time_list[i_t])
+        push!(x1_traject_inserted, copy(x1_traject[i_t]))
+        push!(x2_traject_inserted, copy(x2_traject[i_t]))
+
+        t_interval = time_list[i_t+1] - time_list[i_t]
+        if(t_interval>time_interval_threshold)
+            intermediate_time = 0.5*(time_list[i_t+1] + time_list[i_t])
+            push!(time_list_inserted, intermediate_time)
+
+            #also make interpolation for the frequncies. 
+            x1_traject_intermediate = copy(0.5*(x1_traject[i_t+1] + x1_traject[i_t]))
+            x2_traject_intermediate = copy(0.5*(x2_traject[i_t+1] + x2_traject[i_t]))
+            push!(x1_traject_inserted, copy(x1_traject_intermediate))
+            push!(x2_traject_inserted, copy(x2_traject_intermediate))
+        end
+    end;
+    push!(time_list_inserted, time_list[end])
+    push!(x1_traject_inserted, copy(x1_traject[end]))
+    push!(x2_traject_inserted, copy(x2_traject[end]))
+    
+    return (time_list_inserted, x1_traject_inserted, x2_traject_inserted)
+end
+
+
+function get_Bezier_Ctot_drift_x1mean_binary_simple_with_midpoints(L, data, time_list_in, time_interval_threshold)
+    time_list = unique(time_list_in) 
+    dg = 1.0
+
+    t_old = time_list[1]
+    (n_t, sample_t) = get_sample_at_t(data, t_old)
+    (x1, x2) = get_x1_x2(L, n_t, sample_t)
+    x1_init = copy(x1)
+    
+    x2_traject = []; 
+    x1_traject = []
+    x2_traject = push!(x2_traject, copy(x2))
+    x1_traject = push!(x1_traject, copy(x1))
+    x1_fini = zeros(size(x1_init))
+    for t in time_list[2:end]
+        (n_t, sample_t) = get_sample_at_t(data, t)
+        (x1, x2) = get_x1_x2(L, n_t, sample_t)
+        x2_traject = push!(x2_traject, copy(x2))
+        x1_traject = push!(x1_traject, copy(x1))
+        if(t==time_list[end])
+            x1_fini = copy(x1)
+        end
+    end
+    (time_list, x1_traject, x2_traject) = get_inserted_time_trajectory_set(time_list, x1_traject, x2_traject, time_interval_threshold)
+    (point_set_x1_a, point_set_x1_b, point_set_x2_a, point_set_x2_b) = get_Bezier_vec_Mat_for_all_sites_time_binary_filter(L, x1_traject, x2_traject)
+
+    Dt_sum = t_old
+    x1_mean = zeros(size(x1_traject[1]))
+    B2 = get_integrated_Bezier_2nd()
+    
+    C_tot1 = zeros(L, L); C_tot2 = zeros(L, L)
+    drift = zeros(L)
+    for t_id in 1:(length(x1_traject)-1)
+        # Integrated single freq.
+        x1_t1 = x1_traject[t_id]; 
+        x1_t2 = x1_traject[t_id+1]
+        x1 = 0.25 * ( x1_t1 + point_set_x1_a[:,t_id] + point_set_x1_b[:,t_id] + x1_t2)
+            
+        # Integrated single freq.
+        x2_t1 = x2_traject[t_id]; 
+        x2_t2 = x2_traject[t_id+1]
+    
+        x2 = 0.25 * ( x2_t1 + point_set_x2_a[:,:,t_id]+ point_set_x2_b[:,:,t_id] + x2_t2)
+        
+        B1 = copy(x1_t1)
+        B1 = hcat(B1, 3*point_set_x1_a[:,t_id])
+        B1 = hcat(B1, 3*point_set_x1_b[:,t_id])
+        B1 = hcat(B1, x1_t2)
+        
+        C_temp1 = B1 * B2 * B1'
+        C_temp1 = 0.5 * copy(C_temp1 + C_temp1')
+        C_temp2 = x1 * x1'
+        
+        C1 = x2 - C_temp1
+        C_diag1 = copy(x1) - Array([B1[n,:]' * B2 * B1[n,:] for n in 1:size(B1,1)]) 
+        C1[diagind(C1)] = C_diag1
+        
+        t = time_list[t_id+1]
+        Dt = t - t_old; 
+        t_old = t
+        
+        drift += dg * Dt * (ones(L) - 2 * x1)
+        C_tot1 += dg * Dt * C1
+        
+        x1_mean += x1 * Dt
+        Dt_sum += Dt
+    end
+    
+    (evl1,evt1) = eigen(C_tot1)
+    #@printf("min(λtot1):%.4f, sum(λtot1):%.4f, min(λtot2):%.4f, sum(λtot2):%.4f, sumDt:%d \n\n", minimum(evl1), sum(evl1), minimum(evl2), sum(evl2), Dt_sum)
+    
+    
+    x1_mean /= Dt_sum
+    return (C_tot1, drift, x1_mean, x1_init, x1_fini, point_set_x1_a, point_set_x1_b, point_set_x2_a, point_set_x2_b)
+end;

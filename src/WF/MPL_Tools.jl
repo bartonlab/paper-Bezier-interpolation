@@ -37,13 +37,10 @@ function resumpling_data(data, N, N_subset)
 end;
 
 function get_data_time(file_key1, file_key2, data_dir, id_ensemble, time_upto=300)
-    fname_in = data_dir * file_key1 *"_id-"*string(id_ensemble) * file_key2
+    fname_in = data_dir * file_key1 * string(id_ensemble) * file_key2
     data = readdlm(fname_in);
     read_upto = count(data[:,1] .<= time_upto)
     data = copy(data[1:read_upto, :])
     time_list = get_time_list(data);
     return (data, time_list)
 end;
-
-
-
