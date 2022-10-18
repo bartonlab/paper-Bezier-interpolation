@@ -22,6 +22,7 @@ Scripts for the analysis and creating figures are organized in `note` a director
 4. Scripts for analyzing and inferring genetic selection coefficients for HIV-1 data are located in the `Inference_HIV.ipynb notebook`. The required input data set can be found in the previous study, [Sohail, et.al](https://www.nature.com/articles/s41587-020-0737-3). 
 5. Finally, scripts for analysis and figures contained in the manuscript are located in the `figures.ipynb` notebook. 
 
+Our preprint is available at https://arxiv.org/abs/2209.11285 .
 
 # License
 
